@@ -85,7 +85,7 @@ Of the two simple imputation strategies suggested on the assignment page, the st
 
 As of this writing, I have been unable to implement the above imputation strategy in R.  The logic seems clear, but I have been unable to write functional code for it.  I don't have any reference books with me, my search-fu is apparently weak, and there's a deadline; nonetheless, I am deeply ashamed, and intend to solve the problem on my own time.  However, in this fallen world, we must sometimes achieve results by imperfect mechanisms.  In order to partially complete the assignment, I read the base data into Excel, implemented the strategy in Excel -- adding a column containing imputed values, rather than replacing the original -- saved the resulting file as a csv, and read it back into R.  
 
-The following R code read my modified csv.  I fear that, without access to this modified csv, you will have only my word, the summary statistics, and the shape of the plot to assure you that the imputation algorithm was implemented in a logically correct fashion.  It was, and I could include the Excel function I used, but really I wouldn't give this method any better grade for doing so, so I'm not going to worry about it.  
+The following R code read my modified csv.  I fear that, without access to the formula used to modify this csv, you will have only my word, the summary statistics, and the shape of the plot to assure you that the imputation algorithm was implemented in a logically correct fashion.  It was, and I could include the Excel function I used, but really I wouldn't give this method any better grade for doing so, so I'm not going to worry about it.  I did include the new csv itself, so you can at least check the correctness of the values.  
 
 
 
