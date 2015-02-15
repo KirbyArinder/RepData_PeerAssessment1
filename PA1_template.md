@@ -1,12 +1,3 @@
----
-title: "PA1_template.Rmd"
-author: "KirbyArinder"
-date: "Sunday, February 15, 2015"
-output: 
-html_document:
-keep_md: true
-self_contained: no
----
 This is a document intended to fulfill the requirements for the first peer assessment for the "Reproducible Research" class.  It is intended to be read in conjunction with the relevant assignment page for that class.  
 
 ## Loading and preprocessing the data
