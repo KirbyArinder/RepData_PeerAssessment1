@@ -23,7 +23,6 @@ This question was answered using tools from the plyr package, as follows:
 ```{r}
 library(plyr)
 library(dplyr)
-
 stepsperday <- ddply(basedata, c("date"), summarise, steps = sum(steps))
 ```
 
@@ -69,40 +68,37 @@ plot(avstepsperinterval$interval, avstepsperinterval$steps, type="l", ylab = "st
 
 Of the two simple imputation strategies suggested on the assignment page, the strategy of replacing NA values with the average value of the interval in question over all days was the more appropriate.  Replacing NA values with the average value of the day in question over all intervals fails to remove all NA values, as some days have no measurements at all.  No intervals have no measurements at all, however, even if some intervals have only measurements whose value is zero.  As such, for purposes of this assignment, all NA values were replaced with the average value of the appropriate interval over all days.  
 
-###IMPORTANT GRADING NOTE
-
-As of this writing, I have been unable to implement the above imputation strategy in R.  The logic seems clear, but I have been unable to write functional code for it.  I don't have any reference books with me, my search-fu is apparently weak, and there's a deadline; nonetheless, I am deeply ashamed, and intend to solve the problem on my own time.  However, in this fallen world, we must sometimes achieve results by imperfect mechanisms.  In order to partially complete the assignment, I read the base data into Excel, implemented the strategy in Excel -- adding a column containing imputed values, rather than replacing the original -- saved the resulting file as a csv, and read it back into R.  
-
-The following R code read my modified csv.  I fear that, without access to the formula used to modify this csv, you will have only my word, the summary statistics, and the shape of the plot to assure you that the imputation algorithm was implemented in a logically correct fashion.  It was, and I could include the Excel function I used, but really I wouldn't give this method any better grade for doing so, so I'm not going to worry about it.  I did include the new csv itself, so you can at least check the correctness of the values.  
+The following code implements the above imputation strategy.  
 
 
 ```{r}
-basedata2 <- read.csv("RepResPA1dataMOD2.csv")
-```
+#This bit returns the row numbers of the NA values, which will be useful later.
+nas <- which(is.na(basedata$steps))
 
-Since "RepResPA1dataMOD2.csv" differs from the csv provided with the assignment only by virtue of its extra column, "interpolated", containing imputed values in place of NAs, it was necessary to convert the "date" column into date format, just as is in the first section of this document.  The following code accomplished the date conversion: 
+#This bit counts how many NA values there are in the dataset.  
+nacount <- length(nas)
 
-```{r}
-basedata2$date <- as.Date(basedata2$date, format ="%m/%d/%Y")
-```
+#This bit makes a new dataset.
+basedataimputed <- basedata
 
-Here's a look inside the preprocessed csv I'm using for this section, just to assure you of the bona fides of the modifications I made, and so the following code is a little clearer.    
+#And this bit imputes missing values.  
+for (i in nas) {
+  basedataimputed[i, 1] <- avstepsperinterval[which(avstepsperinterval$interval == basedataimputed[i,3]), 2]
+}
 
-```{r}
-head(basedata2)
 ```
 
 The following code summarizes the total number of steps per day on the imputed-values column of the new file:  
 
 ```{r}
-imputedstepsperday <- ddply(basedata2, c("date"), summarise, interpolated = sum(interpolated))
+imputedstepsperday <- ddply(basedataimputed, c("date"), summarise, steps = sum(steps))
 ```
 
 And the following code calculates the mean and median of steps per day, with imputed values included.  
 
 ```{r}
-meanimputed <- mean(imputedstepsperday$interpolated, na.rm = TRUE)
-medimputed <- median(imputedstepsperday$interpolated, na.rm = TRUE)
+meanimputed <- mean(imputedstepsperday$steps, na.rm = TRUE)
+medimputed <- median(imputedstepsperday$steps, na.rm = TRUE)
 ```
 
 The mean and median values, post-imputation, are both 10766.19.  Thus, this imputation strategy leaves the mean number of steps per day unchanged, and brings the median into alignment with the mean, as expected.  
@@ -110,10 +106,8 @@ The mean and median values, post-imputation, are both 10766.19.  Thus, this impu
 The code below creates the appended histogram:  
 
 ```{r}
-hist(imputedstepsperday$interpolated, xlab = "total steps per day", main = "Steps/day, missing values imputed")
+hist(imputedstepsperday$steps, xlab = "total steps per day", main = "Steps/day, missing values imputed")
 ```
-
-Once again, though the post-imputation mean, median, and histogram are correct, I wouldn't give full credit for this solution if I were grading it; I'd count off one point for failing to provide an imputation strategy AND code for that strategy.  I gave you a strategy, but not code.  I might, if I were feeling particularly strict, also count off one point for failing to provide R code for all results; strictly speaking, if you have the right csvs, the r code provided WILL produce all results given, but you have to have a csv not provided with the assignment that implements a proper imputation strategy as described.  Anyway, alas, I'd count off one or two points.  Sic transit gloria mundi.  
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -122,33 +116,33 @@ The following code finds the days of the week and classifies them by a factor va
 
 ```{r}
 #This part finds the days of the week.
-basedata2$day <- weekdays(basedata2$date)
+basedataimputed$day <- weekdays(basedataimputed$date)
 
 #This part classifies the days of the week.  
-basedata2$weekday <- ifelse(basedata2$day %in% c("Saturday", "Sunday"), "Weekend", "Weekday")
+basedataimputed$weekday <- ifelse(basedataimputed$day %in% c("Saturday", "Sunday"), "Weekend", "Weekday")
 
 #This part changes the weekday column into a factor.    
-basedata2$weekday <- as.factor(basedata2$weekday)
+basedataimputed$weekday <- as.factor(basedataimputed$weekday)
 ```
 
 And the following code creates subsets by that factor. 
 
 ```{r}  
-WEdata <- subset(basedata2, weekday == "Weekend", select = c(steps, interpolated, date, interval, day, weekday))
-WDdata <- subset(basedata2, weekday == "Weekday", select = c(steps, interpolated, date, interval, day, weekday))
+WEdata <- subset(basedataimputed, weekday == "Weekend", select = c(steps, date, interval, day, weekday))
+WDdata <- subset(basedataimputed, weekday == "Weekday", select = c(steps, date, interval, day, weekday))
 ```
 
 The following summarizes the subsets:  
 
 ```{r}
-WEavstepsperinterval <- ddply(WEdata, c("interval"), summarise, interpolated = mean(interpolated))
-WDavstepsperinterval <- ddply(WDdata, c("interval"), summarise, interpolated = mean(interpolated))
+WEavstepsperinterval <- ddply(WEdata, c("interval"), summarise, steps = mean(steps))
+WDavstepsperinterval <- ddply(WDdata, c("interval"), summarise, steps = mean(steps))
 ```
 
 And finally, the following code plots the subsets.  In both plots, the Y axis maximum was altered to a consistent 300 in order to allow for less misleading visual comparison. The answer to the question posed is that people walk less overall on the weekends, but with a spike at early intervals.  
 
 ```{r}
 par(mfrow = c(2,1))
-with(WEavstepsperinterval, (plot(interval, interpolated, type = "l", ylab = "mean steps", ylim = c(0, 300), main = "Weekend mean steps per interval")))
-with(WDavstepsperinterval, (plot(interval, interpolated, type = "l", ylab = "mean steps", ylim = c(0, 300), main = "Weekday mean steps per interval")))
+with(WEavstepsperinterval, (plot(interval, steps, type = "l", ylab = "mean steps", ylim = c(0, 300), main = "Weekend mean steps per interval")))
+with(WDavstepsperinterval, (plot(interval, steps, type = "l", ylab = "mean steps", ylim = c(0, 300), main = "Weekday mean steps per interval")))
 ```
